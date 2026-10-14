@@ -37,7 +37,8 @@ public enum Messages implements IHolderAccessor {
             "&f/locks reload &e重载插件配置文件",
             ""),
     create__need_wall_sign("&7[&b收费门&7]&e 需要将告示牌贴在墙上才可创建收费门."),
-    create__need_door("&7[&b收费门&7]&e 需要将告示牌贴在铁门上方才可创建收费门."),
+    create__need_door("&7[&b收费门&7]&e 需要将告示牌贴在铁门上方（或铁门上）才可创建收费门."),
+    create__door_conflict("&7[&b收费门&7]&e 这里已经有一块收费门木牌了."),
     create__money_not_enough("&7[&b收费门&7]&e 你没有足够的金币来创建收费门! 需要&b %money% &e金币."),
     create__success("&7[&b收费门&7]&a 收费门创建成功!&e Shift+右键 &a点击告示牌以编辑收费门."),
 

@@ -105,14 +105,14 @@ public class InteractDoorListener extends AbstractModule implements Listener {
         if (isDoorBlock(block)) {
             Boolean bottomHalf = isBottomHalfDoor(block);
             if (bottomHalf == null) return;
-            Block bottomBlock = !bottomHalf // 获取门的下部分方块，如果方块不是门，则获取方块本身
+            // 获取门的下部分方块，如果方块不是门，则获取方块本身
+            Block bottomBlock = !bottomHalf
                     ? block.getRelative(BlockFace.DOWN)
                     : block;
-            Block baseBlock = bottomHalf // 获取门上面承载告示牌的方块
-                    ? block.getRelative(0, 2, 0)
-                    : block.getRelative(0, 1, 0);
+            // 获取门上面可能承载告示牌的方块
+            Block baseBlock = bottomBlock.getRelative(0, 2, 0);
             // 通过点击方向的两侧寻找收费门告示牌
-            LockData data = findSign(baseBlock, clickFace);
+            LockData data = findSign(baseBlock, bottomBlock, clickFace);
             if (data == null) return;
             e.setCancelled(true);
             if (isOffHand(e)) return;
@@ -124,8 +124,7 @@ public class InteractDoorListener extends AbstractModule implements Listener {
             // 是否正在进入收费门
             boolean isEntering = signFace.equals(clickFace);
             int reach = isEntering ? data.getReachEnter() : data.getReachLeave();
-            Block targetBlock = baseBlock.getRelative(clickFace.getOppositeFace(), Math.max(1, 1 + reach))
-                        .getRelative(BlockFace.DOWN, 2);
+            Block targetBlock = bottomBlock.getRelative(clickFace.getOppositeFace(), Math.max(1, 1 + reach));
             // 判定是否有实心方块堵门
             if (preventSolidTarget) {
                 if (isSolid(targetBlock)) {
@@ -274,7 +273,7 @@ public class InteractDoorListener extends AbstractModule implements Listener {
      */
     @Nullable
     @SuppressWarnings("deprecation")
-    private Boolean isBottomHalfDoor(Block block) {
+    public Boolean isBottomHalfDoor(Block block) {
         if (supportBlockData) {
             org.bukkit.block.data.BlockData data = block.getState().getBlockData();
             if (data instanceof org.bukkit.block.data.Bisected) {
@@ -289,15 +288,28 @@ public class InteractDoorListener extends AbstractModule implements Listener {
         return null;
     }
 
-    private @Nullable LockData findSign(Block baseBlock, BlockFace clickFace) {
-        BlockState b1 = baseBlock.getRelative(clickFace).getState();
+    private @Nullable LockData findSign(Block baseBlock, Block bottomBlock, BlockFace clickFace) {
+        LockData data = findSign(baseBlock, clickFace);
+        if (data != null) {
+            return data;
+        }
+        Block upBlock = bottomBlock.getRelative(BlockFace.UP);
+        LockData data1 = findSign(upBlock, clickFace);
+        if (data1 != null) {
+            return data1;
+        }
+        return findSign(bottomBlock, clickFace);
+    }
+
+    protected @Nullable LockData findSign(Block block, BlockFace clickFace) {
+        BlockState b1 = block.getRelative(clickFace).getState();
         if (b1 instanceof Sign) {
             LockData data = SignEditor.get((Sign) b1);
             if (data != null) {
                 return data;
             }
         }
-        BlockState b2 = baseBlock.getRelative(clickFace.getOppositeFace()).getState();
+        BlockState b2 = block.getRelative(clickFace.getOppositeFace()).getState();
         if (b2 instanceof Sign) {
             return SignEditor.get((Sign) b2);
         }

@@ -56,11 +56,40 @@ public class LocksCreateListener extends AbstractModule implements Listener {
                 return;
             }
             InteractDoorListener door = InteractDoorListener.inst();
-            Block baseBlock = block.getRelative(facing.getOppositeFace());
-            Block doorBlock = baseBlock.getRelative(BlockFace.DOWN);
-            if (!door.isDoorBlock(doorBlock) || door.isDoorBlock(baseBlock)) {
-                Messages.create__need_door.tm(player);
-                return;
+            Block blockBehindSign = block.getRelative(facing.getOppositeFace());
+            if (door.isDoorBlock(blockBehindSign)) {
+                Boolean isBottomHalf = door.isBottomHalfDoor(blockBehindSign);
+                if (isBottomHalf == null) return;
+                Block topBlock = isBottomHalf ? blockBehindSign.getRelative(BlockFace.UP) : blockBehindSign;
+                Block bottomBlock = isBottomHalf ? blockBehindSign : blockBehindSign.getRelative(BlockFace.DOWN);
+                if (!door.isDoorBlock(topBlock) || !door.isDoorBlock(bottomBlock)
+                        || door.isBottomHalfDoor(topBlock) != Boolean.FALSE
+                        || door.isBottomHalfDoor(bottomBlock) != Boolean.TRUE
+                ) {
+                    Messages.create__need_door.tm(player);
+                    return;
+                }
+                Block realBaseBlock = topBlock.getRelative(BlockFace.UP);
+                if (door.findSign(realBaseBlock, facing) != null
+                        || door.findSign(topBlock, facing) != null
+                        || door.findSign(bottomBlock, facing) != null) {
+                    Messages.create__door_conflict.tm(player);
+                }
+            } else {
+                Block topBlock = blockBehindSign.getRelative(BlockFace.DOWN);
+                Block bottomBlock = topBlock.getRelative(BlockFace.DOWN);
+                if (!door.isDoorBlock(topBlock) || !door.isDoorBlock(bottomBlock)
+                        || door.isBottomHalfDoor(topBlock) != Boolean.FALSE
+                        || door.isBottomHalfDoor(bottomBlock) != Boolean.TRUE
+                ) {
+                    Messages.create__need_door.tm(player);
+                    return;
+                }
+                if (door.findSign(blockBehindSign, facing) != null
+                        || door.findSign(topBlock, facing) != null
+                        || door.findSign(bottomBlock, facing) != null) {
+                    Messages.create__door_conflict.tm(player);
+                }
             }
             if (!player.hasPermission("sweet.locks.create")) {
                 Messages.no_permission.tm(player);
